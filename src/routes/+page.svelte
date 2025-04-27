@@ -113,22 +113,7 @@
 	</section>
 	<h1>KASVIHUONE</h1>
 	<section>
-		{#if error}
-			<p>Error: {error}</p>
-			{:else if sensorData.length === 0}
-			<p>Loading...</p>
-			{:else}
-			{#each sensorData as row}
-				<div class="tile">
-					<div class="title">Sensor #{row.sensor_id}</div>
-					<div class="values">
-						<p class="value">{JSON.parse(row.values).temperature} °C</p>
-						<p class="value">{JSON.parse(row.values).humidity} %</p>
-						<!--<p class="value">{row.timestamp}</p>-->
-					</div>
-				</div>
-			{/each}
-		{/if}
+
 	</section>
 
 	{#if selectedRow}
