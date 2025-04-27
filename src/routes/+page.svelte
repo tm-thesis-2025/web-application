@@ -131,7 +131,7 @@
 					<p>Loading sensor settings...</p>
 				{:else if intervalError}
 					<p>Error: {intervalError}</p>
-				{:else if sensorInterval !== null}
+				{:else}
 					<div class="interval-settings">
 						<label for="interval">Update interval (seconds):</label>
 						<input id="interval" type="number" bind:value={sensorInterval} min="1" />
@@ -190,7 +190,7 @@
 		width: 100%;
 		height: 100%;
 		padding: 0.75rem;
-		background: rgba(0,0,0,0.3);
+		background: rgba(0,0,0,0);
 		backdrop-filter: blur(4px);
 		display: flex;
 		align-items: center;
