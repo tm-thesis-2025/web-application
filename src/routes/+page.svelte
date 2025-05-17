@@ -1,6 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import Chart from 'chart.js/auto';
+
+	let chart: Chart | null = null;
+	let chartCanvas: HTMLCanvasElement | null = null;
 
 	let sensorData: { sensor_id: string; timestamp: string; values: string }[] = [];
 	let error: string | null = null;
@@ -78,9 +81,54 @@
 
 	let selectedRow: typeof sensorData[0] | null = null;
 
-	function openModal(row: typeof sensorData[0]) {
+	function truncateSensorId(id: string) {
+		if (id.length > 15) {
+			return id.slice(0, 5) + '...' + id.slice(-4);
+		}
+		return id;
+	}
+
+	async function openModal(row: typeof sensorData[0]) {
 		selectedRow = row;
 		fetchSensorConfig(row.sensor_id);
+
+		const res = await fetch(`https://thesisproject.marko-rautiainen.workers.dev/api/v1/sensor/data?sensor_id=${row.sensor_id}`, {
+			headers: {
+				'Authorization': 'Bearer secretkey2'
+			}
+		});
+		const dataPoints = await res.json();
+		// After data is fetched, initialize chart
+		await tick();
+		if (chart) {
+			chart.destroy();
+		}
+		if (chartCanvas) {
+			chart = new Chart(chartCanvas, {
+				type: 'line',
+				data: {
+					labels: dataPoints.map((d: any) => d.timestamp),
+					datasets: [
+						{
+							label: 'Temperature (°C)',
+							data: dataPoints.map((d: any) => JSON.parse(d.values).temperature),
+							borderColor: 'red',
+							fill: false
+						},
+						{
+							label: 'Humidity (%)',
+							data: dataPoints.map((d: any) => JSON.parse(d.values).humidity),
+							borderColor: 'blue',
+							fill: false
+						}
+					]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false
+				}
+			});
+		}
 	}
 
 	function closeModal() {
@@ -101,11 +149,11 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="tile" on:click={() => openModal(row)}>
-					<div class="title">Sensor #{row.sensor_id}</div>
+					<div class="title">{truncateSensorId(row.sensor_id)}</div>
 					<div class="values">
-						<p class="value">{JSON.parse(row.values).temperature} °C</p>
-						<p class="value">{JSON.parse(row.values).humidity} %</p>
-						<!--<p class="value">{row.timestamp}</p>-->
+						{#each Object.entries(JSON.parse(row.values)) as [key, value]}
+							<p class="value">{key}: {value}</p>
+						{/each}
 					</div>
 				</div>
 			{/each}
@@ -122,10 +170,7 @@
 		<div class="modal-backdrop" on:click={closeModal}>
 			<div class="modal" on:click|stopPropagation>
 				<button class="close-button" on:click={closeModal}>×</button>
-				<h2>Parveke > Sensor #{selectedRow.sensor_id}</h2>
-				<p>Temperature: {JSON.parse(selectedRow.values).temperature} °C</p>
-				<p>Humidity: {JSON.parse(selectedRow.values).humidity} %</p>
-				<p>Timestamp: {selectedRow.timestamp}</p>
+				<h2>Parveke > {selectedRow.sensor_id}</h2>
 
 				{#if intervalLoading}
 					<p>Loading sensor settings...</p>
@@ -138,6 +183,16 @@
 						<button on:click={() => sensorInterval !== null && updateSensorInterval(selectedRow!.sensor_id, sensorInterval)}>Save</button>
 					</div>
 				{/if}
+
+				<canvas bind:this={chartCanvas}></canvas>
+
+				<!--
+				<p>Temperature: {JSON.parse(selectedRow.values).temperature} °C</p>
+				<p>Humidity: {JSON.parse(selectedRow.values).humidity} %</p>
+				<p>Timestamp: {selectedRow.timestamp}</p>
+				-->
+
+
 			</div>
 		</div>
 	{/if}
@@ -156,7 +211,6 @@
 </div>
 
 <style>
-
 	.interval-settings {
 		margin-top: 1rem;
 		display: flex;
@@ -183,6 +237,7 @@
 		border-radius: 0.5rem;
 		cursor: pointer;
 	}
+
 	.modal-backdrop {
 		position: fixed;
 		top: 0;
@@ -213,6 +268,16 @@
 		text-align: center;
 	}
 
+	canvas {
+		flex: 1;
+		width: 100%;
+		height: 100%;
+		max-height: 500px;
+		margin-top: 1rem;
+		margin-left: -2rem;
+		margin-right: -2rem;
+	}
+
 	.close-button {
 		position: absolute;
 		top: 0.5rem;
@@ -224,16 +289,18 @@
 		cursor: pointer;
 		color: #2196F3;
 	}
+
 	.close-button:hover {
 		color: #0e5caa;
 	}
+
 	:global(body) {
 		margin: 0;
 		min-height:100dvh;
 		background: linear-gradient(133deg, rgba(76,175,80,1) 0%, rgba(46,125,50,1) 80%);
 		background: #2196F3;
-
 	}
+
 	main {
 		display: flex;
 		flex-direction: column;
@@ -259,7 +326,6 @@
 		border-radius: 2rem;
 		border: 1px solid rgba(0, 0, 0, 0.1);
 		backdrop-filter: blur(1rem);
-
 	}
 
 	.menu > button {
@@ -309,6 +375,10 @@
 		font-size: 1.5rem;
 		color: #333;
 		padding: 0.5rem;
+		max-width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
 	.tile > .values {
