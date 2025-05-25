@@ -14,9 +14,10 @@
 
 	async function fetchSensorData() {
 		try {
-		const res = await fetch('https://thesisproject.marko-rautiainen.workers.dev/api/v1/sensor/data', {
+			// Replace with your actual Cloudflare Workers link and secret key
+		const res = await fetch('https://{YOUR_OWN_CLOUDFLARE_WORKERS_LINK}.workers.dev/api/v1/sensor/data', {
 			headers: {
-			'Authorization': 'Bearer secretkey2'
+			'Authorization': 'Bearer {YOUR_SECRET_KEY}'
 			}
 		});
 
@@ -34,9 +35,10 @@
 		intervalLoading = true;
 		intervalError = null;
 		try {
-			const res = await fetch(`https://thesisproject.marko-rautiainen.workers.dev/api/v1/sensor/config?sensor_id=${sensorId}`, {
+			// Replace with your actual Cloudflare Workers link and secret key
+			const res = await fetch(`https://{YOUR_OWN_CLOUDFLARE_WORKERS_LINK}.workers.dev/api/v1/sensor/config?sensor_id=${sensorId}`, {
 				headers: {
-					'Authorization': 'Bearer secretkey2'
+					'Authorization': 'Bearer {YOUR_SECRET_KEY}'
 				}
 			});
 			if (!res.ok) {
@@ -58,10 +60,11 @@
 
 	async function updateSensorInterval(sensorId: string, newInterval: number) {
 		try {
-			const res = await fetch(`https://thesisproject.marko-rautiainen.workers.dev/api/v1/sensor/config?sensor_id=${sensorId}`, {
+			// Replace with your actual Cloudflare Workers link and secret key
+			const res = await fetch(`https://{YOUR_OWN_CLOUDFLARE_WORKERS_LINK}.workers.dev/api/v1/sensor/config?sensor_id=${sensorId}`, {
 				method: 'PUT',
 				headers: {
-					'Authorization': 'Bearer secretkey2',
+					'Authorization': 'Bearer {YOUR_SECRET_KEY}',
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({ update_interval: newInterval })
@@ -91,10 +94,10 @@
 	async function openModal(row: typeof sensorData[0]) {
 		selectedRow = row;
 		fetchSensorConfig(row.sensor_id);
-
-		const res = await fetch(`https://thesisproject.marko-rautiainen.workers.dev/api/v1/sensor/data?sensor_id=${row.sensor_id}`, {
+		// Replace with your actual Cloudflare Workers link and secret key
+		const res = await fetch(`https://{YOUR_OWN_CLOUDFLARE_WORKERS_LINK}.workers.dev/api/v1/sensor/data?sensor_id=${row.sensor_id}`, {
 			headers: {
-				'Authorization': 'Bearer secretkey2'
+				'Authorization': 'Bearer {YOUR_SECRET_KEY}'
 			}
 		});
 		const dataPoints = await res.json();
@@ -158,10 +161,6 @@
 				</div>
 			{/each}
 		{/if}
-	</section>
-	<h1>KASVIHUONE</h1>
-	<section>
-
 	</section>
 
 	{#if selectedRow}
